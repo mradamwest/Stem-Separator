@@ -402,3 +402,14 @@ def run_separation(source: str | Path, output_root: str | Path | None = None, mo
 def model_cache_has_files() -> bool:
     """Return whether any local separation checkpoint is already cached."""
     return bool(model_cache_status()["files"])
+
+
+def first_run_status(plan: SeparationPlan) -> dict[str, object]:
+    """Return UI-ready first-run state before any model acquisition begins."""
+    preflight = separation_preflight(plan)
+    cached = model_cache_has_files()
+    return {
+        **preflight,
+        "model_cached": cached,
+        "requires_model_download": bool(preflight["runtime_ready"]) and not cached,
+    }
