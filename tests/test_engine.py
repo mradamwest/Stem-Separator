@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from stem_separator.engine import create_separation_plan, default_output_directory, discover_model_stems, inspect_engine, prepare_output_directory, resolve_device, validate_audio_input, validate_input
+from stem_separator.engine import create_separation_plan, default_output_directory, discover_model_stems, inspect_engine, prepare_output_directory, stem_output_paths, resolve_device, validate_audio_input, validate_input
 
 
 def test_engine_imports():
@@ -92,3 +92,20 @@ def test_discover_model_stems_rejects_missing_sources():
         sources = []
     with pytest.raises(RuntimeError, match="does not expose"):
         discover_model_stems(Model())
+
+
+def test_stem_output_paths_follow_dynamic_model(tmp_path: Path):
+    source = tmp_path / "track.wav"
+    source.write_bytes(b"audio")
+    plan = create_separation_plan(source)
+    paths = stem_output_paths(plan, ["vocals", "guitar", "piano"])
+    assert list(paths) == ["vocals", "guitar", "piano"]
+    assert paths["guitar"] == plan.output_directory / "guitar.wav"
+
+
+def test_stem_output_paths_reject_unsafe_names(tmp_path: Path):
+    source = tmp_path / "track.wav"
+    source.write_bytes(b"audio")
+    plan = create_separation_plan(source)
+    with pytest.raises(ValueError, match="unsafe"):
+        stem_output_paths(plan, ["../escape"])
