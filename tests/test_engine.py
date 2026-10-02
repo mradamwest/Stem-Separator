@@ -169,3 +169,15 @@ def test_verify_exported_stems(tmp_path: Path):
     verify_exported_stems({"vocals": vocals})
     with pytest.raises(RuntimeError, match="not exported"):
         verify_exported_stems({"drums": tmp_path / "missing.wav"})
+
+
+def test_validate_model_sample_rate_supports_demucs_attribute():
+    class Model:
+        samplerate = 44100
+    assert validate_model_sample_rate(Model()) == 44100
+
+
+def test_validate_model_sample_rate_rejects_missing_rate():
+    class Model: pass
+    with pytest.raises(RuntimeError, match="valid sample rate"):
+        validate_model_sample_rate(Model())
