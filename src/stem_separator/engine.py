@@ -297,8 +297,7 @@ def separation_summary(plan: SeparationPlan, stem_names) -> str:
 
 def load_separator(plan: SeparationPlan):
     """Load Demucs through its Python API; never spawn the packaged executable."""
-    from demucs.api import Separator
-    return Separator(model=plan.model_name, device=resolve_device(plan.device), progress=False)
+    return load_separator_for_plan(plan)
 
 
 def separate_with_demucs(plan: SeparationPlan) -> dict[str, Path]:
@@ -324,3 +323,11 @@ def separate_audio(source: str | Path, output_root: str | Path | None = None, mo
     """Public end-to-end separation entry point used by the future UI and packaged app."""
     plan = create_separation_plan(source, output_root=output_root, model_name=model_name, device=device)
     return separate_with_demucs(plan)
+
+
+def load_separator_for_plan(plan: SeparationPlan, separator_factory=None):
+    """Create a separator with dependency injection for reliable packaging/tests."""
+    if separator_factory is None:
+        from demucs.api import Separator
+        separator_factory = Separator
+    return separator_factory(model=plan.model_name, device=resolve_device(plan.device), progress=False)
