@@ -1,16 +1,18 @@
-name: Runner Probe
+name: Actions Sanity Check
 
 on:
-  push:
   workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/engine-ci.yml'
+
+permissions:
+  contents: read
 
 jobs:
-  probe:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
+  sanity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
     steps:
-      - name: Confirm hosted runner allocation
-        run: |
-          echo "Runner allocated successfully"
-          echo "$RUNNER_OS"
-          uname -a
+      - name: Runner heartbeat
+        run: echo "GitHub-hosted Actions runner is available"
