@@ -8,11 +8,10 @@ version = "0.1.0"
 requires-python = ">=3.11,<3.12"
 dependencies = [
   "demucs==4.1.0",
-  # Demucs 4.0.1 upstream declares torchaudio <2.1 on Windows.
-  # Keep Torch/Torchaudio matched instead of the previously incompatible 2.5.1 pair.
-  "torch==2.0.1",
-  "torchaudio==2.0.2",
-  # Torch 2.0.1 / TorchAudio 2.0.2 were built against NumPy 1.x; NumPy 2 breaks the ABI.
+  # Demucs 4.1.0 requires torch>=2.1 on Windows; keep Torch/TorchAudio matched.
+  "torch==2.1.2",
+  "torchaudio==2.1.2",
+  # Keep NumPy on 1.x for broad compatibility with this packaged Torch stack.
   "numpy<2",
   "PySide6==6.8.3",
 ]
