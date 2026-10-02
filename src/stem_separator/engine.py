@@ -143,3 +143,12 @@ def validate_stem_results(stem_names, tensors) -> tuple[str, ...]:
     if count != len(names):
         raise RuntimeError(f"Separation returned {count} outputs for {len(names)} stems.")
     return names
+
+
+def validate_stem_audio(stem_name: str, audio) -> None:
+    """Reject empty or malformed model output before a stem is written to disk."""
+    if audio is None:
+        raise RuntimeError(f"Stem '{stem_name}' contains no audio.")
+    numel = getattr(audio, "numel", None)
+    if not callable(numel) or numel() <= 0:
+        raise RuntimeError(f"Stem '{stem_name}' contains no audio.")
