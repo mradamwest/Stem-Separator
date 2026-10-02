@@ -103,3 +103,16 @@ def prepare_output_directory(plan: SeparationPlan) -> Path:
     """Create the planned output directory without deleting existing user files."""
     plan.output_directory.mkdir(parents=True, exist_ok=True)
     return plan.output_directory
+
+
+def discover_model_stems(model) -> tuple[str, ...]:
+    """Read the actual source names exposed by a loaded separation model."""
+    sources = getattr(model, "sources", None)
+    if not sources:
+        raise RuntimeError("Separation model does not expose any stems.")
+    names = tuple(str(name).strip() for name in sources if str(name).strip())
+    if not names:
+        raise RuntimeError("Separation model returned an empty stem list.")
+    if len(set(names)) != len(names):
+        raise RuntimeError("Separation model returned duplicate stem names.")
+    return names
