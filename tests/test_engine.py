@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from stem_separator.engine import create_separation_plan, default_output_directory, inspect_engine, validate_audio_input, validate_input
+from stem_separator.engine import create_separation_plan, default_output_directory, inspect_engine, resolve_device, validate_audio_input, validate_input
 
 
 def test_engine_imports():
@@ -58,3 +58,13 @@ def test_create_separation_plan_rejects_device(tmp_path: Path):
     source.write_bytes(b"audio")
     with pytest.raises(ValueError, match="Unsupported device"):
         create_separation_plan(source, device="metal")
+
+
+def test_resolve_explicit_device():
+    assert resolve_device("cpu") == "cpu"
+    assert resolve_device("cuda") == "cuda"
+
+
+def test_resolve_device_rejects_unknown():
+    with pytest.raises(ValueError, match="Unsupported device"):
+        resolve_device("metal")
