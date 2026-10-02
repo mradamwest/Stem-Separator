@@ -193,3 +193,10 @@ def test_validate_model_channels_rejects_missing_value():
     class Model: pass
     with pytest.raises(RuntimeError, match="valid channel count"):
         validate_model_channels(Model())
+
+
+def test_validate_model_sources_rejects_case_collisions():
+    class Model:
+        sources = ["Vocals", "vocals"]
+    with pytest.raises(RuntimeError, match="case-insensitive duplicate"):
+        validate_model_sources(Model())
