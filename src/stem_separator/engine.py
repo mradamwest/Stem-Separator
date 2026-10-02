@@ -373,3 +373,17 @@ def separation_preflight(plan: SeparationPlan) -> dict[str, object]:
         "cache_directory": cache["directory"],
         "cached_files": cache["files"],
     }
+
+
+def separation_result(plan: SeparationPlan, paths: dict[str, Path]) -> dict[str, object]:
+    """Build verified UI-ready metadata after a successful real separation."""
+    ensure_output_paths_are_inside_plan(plan, paths)
+    verify_exported_stems(paths)
+    return {
+        "source": str(plan.source),
+        "output_directory": str(plan.output_directory),
+        "model_name": plan.model_name,
+        "stems": {name: str(path) for name, path in paths.items()},
+        "count": len(paths),
+        "bytes": sum(path.stat().st_size for path in paths.values()),
+    }
