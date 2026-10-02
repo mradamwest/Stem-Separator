@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from stem_separator.engine import inspect_engine, validate_audio_input, validate_input
+from stem_separator.engine import default_output_directory, inspect_engine, validate_audio_input, validate_input
 
 
 def test_engine_imports():
@@ -35,3 +35,9 @@ def test_validate_audio_input_accepts_wav(tmp_path: Path):
     source = tmp_path / "sample.WAV"
     source.write_bytes(b"audio")
     assert validate_audio_input(source) == source.resolve()
+
+
+def test_default_output_directory(tmp_path: Path):
+    source = tmp_path / "My Song.wav"
+    source.write_bytes(b"audio")
+    assert default_output_directory(source) == tmp_path / "My Song_stems"
