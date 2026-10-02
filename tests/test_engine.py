@@ -138,7 +138,7 @@ def test_safe_stem_filename_handles_windows_reserved_names():
     assert safe_stem_filename("lead:vocal") == "lead_vocal.wav"
 
 
-def test_unique_stem_output_paths, validate_sample_rate():
+def test_ensure_output_paths_are_inside_plan, unique_stem_output_paths, validate_sample_rate():
     assert validate_sample_rate(44100) == 44100
     with pytest.raises(ValueError, match="positive integer"):
         validate_sample_rate(0)
@@ -152,3 +152,12 @@ def test_unique_stem_output_paths_avoid_windows_collisions(tmp_path: Path):
     plan = create_separation_plan(source)
     paths = unique_stem_output_paths(plan, ["lead:vocal", "lead?vocal"])
     assert len({p.name.casefold() for p in paths.values()}) == 2
+
+
+def test_output_paths_must_stay_inside_plan(tmp_path: Path):
+    source = tmp_path / "track.wav"
+    source.write_bytes(b"audio")
+    plan = create_separation_plan(source)
+    ensure_output_paths_are_inside_plan(plan, {"vocals": plan.output_directory / "vocals.wav"})
+    with pytest.raises(ValueError, match="escapes"):
+        ensure_output_paths_are_inside_plan(plan, {"bad": tmp_path / "outside.wav"})
