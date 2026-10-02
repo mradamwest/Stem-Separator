@@ -138,9 +138,17 @@ def test_safe_stem_filename_handles_windows_reserved_names():
     assert safe_stem_filename("lead:vocal") == "lead_vocal.wav"
 
 
-def test_validate_sample_rate():
+def test_unique_stem_output_paths, validate_sample_rate():
     assert validate_sample_rate(44100) == 44100
     with pytest.raises(ValueError, match="positive integer"):
         validate_sample_rate(0)
     with pytest.raises(ValueError, match="positive integer"):
         validate_sample_rate(True)
+
+
+def test_unique_stem_output_paths_avoid_windows_collisions(tmp_path: Path):
+    source = tmp_path / "track.wav"
+    source.write_bytes(b"audio")
+    plan = create_separation_plan(source)
+    paths = unique_stem_output_paths(plan, ["lead:vocal", "lead?vocal"])
+    assert len({p.name.casefold() for p in paths.values()}) == 2
