@@ -33,7 +33,13 @@ class MainWindow(QMainWindow):
             if answer != QMessageBox.Yes:
                 self.start.setEnabled(True); self.status.setText("Model download cancelled"); return
             allow_download = True
-        self.start.setEnabled(False); self.status.setText("Separating…"); self.worker=SeparationWorker(self.source, allow_model_download=allow_download); self.worker.completed.connect(self.done); self.worker.failed.connect(self.failed); self.worker.status.connect(self.status.setText); self.worker.start()
+        self.start.setEnabled(False); self.status.setText("Separating…"); self.worker=SeparationWorker(self.source, allow_model_download=allow_download); self.worker.completed.connect(self.done); self.worker.failed.connect(self.failed); self.worker.status.connect(self.status.setText); self.worker.finished.connect(self.worker_finished); self.worker.start()
+    def worker_finished(self): self.worker = None
+    def closeEvent(self, event):
+        if self.worker and self.worker.isRunning():
+            QMessageBox.information(self, "Stem Separator", "Separation is still running. Wait for it to finish before closing.")
+            event.ignore(); return
+        event.accept()
     def done(self, result):
         self.start.setEnabled(True); stems=result.get("stems",{}); self.status.setText(f"Completed: {len(stems)} stems")
         QMessageBox.information(self,"Stem Separator",f"Separation complete.\n\nOutput: {result.get('output_directory','')}")
