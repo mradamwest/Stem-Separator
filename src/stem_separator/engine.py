@@ -450,7 +450,7 @@ def run_separation(source: str | Path, output_root: str | Path | None = None, mo
     """Complete public workflow: preflight, real separation, then verified result metadata."""
     plan = create_separation_plan(source, output_root=output_root, model_name=model_name, device=device)
     ensure_separation_ready(plan, allow_model_download=allow_model_download)
-    paths = separate_with_demucs(plan, mode=mode, progress_callback=progress_callback)
+    paths = separate_with_demucs(plan) if mode == "4" and progress_callback is None else separate_with_demucs(plan, mode=mode, progress_callback=progress_callback)
     result = separation_result(plan, paths)
     result["mode"] = mode
     return result
