@@ -242,3 +242,10 @@ def validate_model_sources(model) -> tuple[str, ...]:
     if len(set(folded)) != len(folded):
         raise RuntimeError("Separation model returned case-insensitive duplicate stem names.")
     return names
+
+
+def build_export_manifest(plan: SeparationPlan, stem_names) -> dict[str, str]:
+    """Create a deterministic manifest of model-reported stems and their output files."""
+    paths = unique_stem_output_paths(plan, stem_names)
+    ensure_output_paths_are_inside_plan(plan, paths)
+    return {name: path.name for name, path in paths.items()}
