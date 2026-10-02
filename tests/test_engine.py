@@ -161,3 +161,11 @@ def test_output_paths_must_stay_inside_plan(tmp_path: Path):
     ensure_output_paths_are_inside_plan(plan, {"vocals": plan.output_directory / "vocals.wav"})
     with pytest.raises(ValueError, match="escapes"):
         ensure_output_paths_are_inside_plan(plan, {"bad": tmp_path / "outside.wav"})
+
+
+def test_verify_exported_stems(tmp_path: Path):
+    vocals = tmp_path / "vocals.wav"
+    vocals.write_bytes(b"audio")
+    verify_exported_stems({"vocals": vocals})
+    with pytest.raises(RuntimeError, match="not exported"):
+        verify_exported_stems({"drums": tmp_path / "missing.wav"})
