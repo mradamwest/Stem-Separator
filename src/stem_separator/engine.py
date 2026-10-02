@@ -233,3 +233,12 @@ def validate_model_channels(model) -> int:
     if isinstance(channels, bool) or not isinstance(channels, int) or channels <= 0:
         raise RuntimeError("Separation model does not expose a valid channel count.")
     return channels
+
+
+def validate_model_sources(model) -> tuple[str, ...]:
+    """Return validated dynamic source names directly from the loaded model."""
+    names = discover_model_stems(model)
+    folded = [name.casefold() for name in names]
+    if len(set(folded)) != len(folded):
+        raise RuntimeError("Separation model returned case-insensitive duplicate stem names.")
+    return names
