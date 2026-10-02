@@ -109,3 +109,12 @@ def test_stem_output_paths_reject_unsafe_names(tmp_path: Path):
     plan = create_separation_plan(source)
     with pytest.raises(ValueError, match="unsafe"):
         stem_output_paths(plan, ["../escape"])
+
+
+def test_validate_stem_results_accepts_dynamic_count():
+    assert validate_stem_results(["vocals", "guitar", "piano"], [1, 2, 3]) == ("vocals", "guitar", "piano")
+
+
+def test_validate_stem_results_rejects_count_mismatch():
+    with pytest.raises(RuntimeError, match="2 outputs for 3 stems"):
+        validate_stem_results(["vocals", "guitar", "piano"], [1, 2])
