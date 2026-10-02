@@ -274,3 +274,12 @@ def separation_status(plan: SeparationPlan, stem_names) -> dict[str, object]:
         "completed": tuple(completed),
         "complete": len(completed) == len(paths) and bool(paths),
     }
+
+
+def separation_progress(plan: SeparationPlan, stem_names) -> tuple[int, int, float]:
+    """Return completed count, total count, and percentage for dynamic stems."""
+    status = separation_status(plan, stem_names)
+    total = len(status["stems"])
+    completed = len(status["completed"])
+    percent = (completed / total * 100.0) if total else 0.0
+    return completed, total, percent
