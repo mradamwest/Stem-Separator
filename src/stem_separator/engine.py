@@ -73,3 +73,16 @@ def create_separation_plan(
         raise ValueError(f"Unsupported device: {device}")
     audio = validate_audio_input(source)
     return SeparationPlan(audio, default_output_directory(audio, output_root), model_name.strip(), device)
+
+
+def resolve_device(requested: str = "auto") -> str:
+    """Resolve automatic acceleration with a safe CPU fallback."""
+    if requested not in {"auto", "cpu", "cuda"}:
+        raise ValueError(f"Unsupported device: {requested}")
+    if requested != "auto":
+        return requested
+    try:
+        import torch
+        return "cuda" if torch.cuda.is_available() else "cpu"
+    except (ImportError, RuntimeError):
+        return "cpu"
