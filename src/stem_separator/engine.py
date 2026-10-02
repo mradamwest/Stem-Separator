@@ -33,3 +33,14 @@ def validate_input(path: str | Path) -> Path:
     if source.stat().st_size == 0:
         raise ValueError("Input audio file is empty.")
     return source
+
+
+SUPPORTED_AUDIO_EXTENSIONS = frozenset({".wav", ".mp3", ".flac", ".ogg", ".m4a"})
+
+
+def validate_audio_input(path: str | Path) -> Path:
+    """Validate a user-selected audio source before any model work begins."""
+    source = validate_input(path)
+    if source.suffix.lower() not in SUPPORTED_AUDIO_EXTENSIONS:
+        raise ValueError(f"Unsupported audio format: {source.suffix or '<none>'}")
+    return source
