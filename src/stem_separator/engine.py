@@ -318,3 +318,9 @@ def separate_with_demucs(plan: SeparationPlan) -> dict[str, Path]:
         save_audio(audio, paths[name], samplerate=samplerate)
     verify_exported_stems(paths)
     return paths
+
+
+def separate_audio(source: str | Path, output_root: str | Path | None = None, model_name: str = "htdemucs", device: str = "auto") -> dict[str, Path]:
+    """Public end-to-end separation entry point used by the future UI and packaged app."""
+    plan = create_separation_plan(source, output_root=output_root, model_name=model_name, device=device)
+    return separate_with_demucs(plan)
