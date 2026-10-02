@@ -4,6 +4,7 @@ $ErrorActionPreference = "Stop"
   --collect-all demucs `
   --collect-all torchaudio `
   --collect-all numpy `
+  --collect-all imageio_ffmpeg `
   --hidden-import demucs.api `
   --hidden-import numpy.core._multiarray_umath `
   src/stem_separator/__main__.py
