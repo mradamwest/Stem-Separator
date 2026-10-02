@@ -413,3 +413,13 @@ def first_run_status(plan: SeparationPlan) -> dict[str, object]:
         "model_cached": cached,
         "requires_model_download": bool(preflight["runtime_ready"]) and not cached,
     }
+
+
+def ensure_separation_ready(plan: SeparationPlan, allow_model_download: bool = False) -> dict[str, object]:
+    """Enforce explicit consent before a first-run model download can occur."""
+    status = first_run_status(plan)
+    if not status["runtime_ready"]:
+        raise RuntimeError("Demucs runtime is not available.")
+    if status["requires_model_download"] and not allow_model_download:
+        raise RuntimeError("Separation model is not cached; model download approval is required.")
+    return status
