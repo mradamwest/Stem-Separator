@@ -421,3 +421,10 @@ def ensure_separation_ready(plan: SeparationPlan, allow_model_download: bool = F
     if status["requires_model_download"] and not allow_model_download:
         raise RuntimeError("Separation model is not cached; model download approval is required.")
     return status
+
+
+def separation_self_test() -> dict[str, object]:
+    """Lightweight packaged-runtime self-test that never downloads model weights."""
+    info = inspect_engine()
+    from demucs.api import Separator
+    return {"runtime_ready": bool(info.demucs_available), "device": info.device, "separator_api": bool(Separator)}
