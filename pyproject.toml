@@ -14,6 +14,8 @@ dependencies = [
   # Keep NumPy on 1.x for broad compatibility with this packaged Torch stack.
   "numpy<2",
   "PySide6==6.8.3",
+  # Bundled FFmpeg executable provides reliable video-audio extraction on Windows.
+  "imageio-ffmpeg==0.6.0",
 ]
 
 [project.optional-dependencies]
