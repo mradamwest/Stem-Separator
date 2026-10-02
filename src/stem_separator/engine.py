@@ -79,8 +79,16 @@ def resolve_device(requested: str = "auto") -> str:
     """Resolve automatic acceleration with a safe CPU fallback."""
     if requested not in {"auto", "cpu", "cuda"}:
         raise ValueError(f"Unsupported device: {requested}")
-    if requested != "auto":
-        return requested
+    if requested == "cpu":
+        return "cpu"
+    if requested == "cuda":
+        try:
+            import torch
+        except ImportError as exc:
+            raise RuntimeError("CUDA was requested but PyTorch is not installed.") from exc
+        if not torch.cuda.is_available():
+            raise RuntimeError("CUDA was requested but no compatible GPU is available.")
+        return "cuda"
     try:
         import torch
         return "cuda" if torch.cuda.is_available() else "cpu"
