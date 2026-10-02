@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from stem_separator.engine import create_separation_plan, default_output_directory, inspect_engine, resolve_device, validate_audio_input, validate_input
+from stem_separator.engine import create_separation_plan, default_output_directory, inspect_engine, prepare_output_directory, resolve_device, validate_audio_input, validate_input
 
 
 def test_engine_imports():
@@ -68,3 +68,14 @@ def test_resolve_explicit_device():
 def test_resolve_device_rejects_unknown():
     with pytest.raises(ValueError, match="Unsupported device"):
         resolve_device("metal")
+
+
+def test_prepare_output_directory_preserves_existing_files(tmp_path: Path):
+    source = tmp_path / "track.wav"
+    source.write_bytes(b"audio")
+    plan = create_separation_plan(source)
+    plan.output_directory.mkdir()
+    existing = plan.output_directory / "keep.txt"
+    existing.write_text("keep", encoding="utf-8")
+    assert prepare_output_directory(plan) == plan.output_directory
+    assert existing.read_text(encoding="utf-8") == "keep"
