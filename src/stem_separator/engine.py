@@ -129,3 +129,17 @@ def stem_output_paths(plan: SeparationPlan, stem_names) -> dict[str, Path]:
     if any(any(token in name for token in unsafe) for name in names):
         raise ValueError("Stem names contain unsafe path characters.")
     return {name: plan.output_directory / f"{name}.wav" for name in names}
+
+
+def validate_stem_results(stem_names, tensors) -> tuple[str, ...]:
+    """Validate that model output count matches its dynamically reported sources."""
+    names = tuple(str(name).strip() for name in stem_names)
+    if not names:
+        raise RuntimeError("Separation produced no stem names.")
+    try:
+        count = len(tensors)
+    except TypeError as exc:
+        raise RuntimeError("Separation output is not a stem collection.") from exc
+    if count != len(names):
+        raise RuntimeError(f"Separation returned {count} outputs for {len(names)} stems.")
+    return names
