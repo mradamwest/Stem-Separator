@@ -18,3 +18,8 @@ This repository was created from scratch. No source code, build scripts, packagi
 ## Initial milestone
 
 Prove the audio engine end-to-end before building the full GUI or installer.
+
+
+## CI status note
+
+The clean repository has been tested with Windows and Linux GitHub-hosted runner probes. If a probe reports zero executed steps and runner_id 0, no application code has run; application development remains isolated from that external runner-allocation condition.
