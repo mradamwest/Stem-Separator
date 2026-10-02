@@ -202,3 +202,14 @@ def ensure_output_paths_are_inside_plan(plan: SeparationPlan, paths: dict[str, P
         resolved = path.resolve()
         if resolved.parent != root:
             raise ValueError(f"Stem output escapes planned directory: {resolved}")
+
+
+def verify_exported_stems(paths: dict[str, Path]) -> None:
+    """Verify every expected stem file exists and is non-empty after export."""
+    if not paths:
+        raise RuntimeError("No stem outputs were provided for verification.")
+    for name, path in paths.items():
+        if not path.is_file():
+            raise RuntimeError(f"Stem '{name}' was not exported.")
+        if path.stat().st_size == 0:
+            raise RuntimeError(f"Stem '{name}' export is empty.")
