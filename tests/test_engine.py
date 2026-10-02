@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from stem_separator.engine import build_export_manifest, completed_export_manifest, create_separation_plan, default_output_directory, discover_model_stems, inspect_engine, prepare_output_directory, safe_stem_filename, separation_progress, separation_status, stem_output_paths, resolve_device, validate_audio_input, validate_input
+from stem_separator.engine import build_export_manifest, completed_export_manifest, create_separation_plan, default_output_directory, discover_model_stems, inspect_engine, prepare_output_directory, safe_stem_filename, separation_progress, separation_status, separation_summary, stem_output_paths, resolve_device, validate_audio_input, validate_input
 
 
 def test_engine_imports():
@@ -236,3 +236,10 @@ def test_separation_progress_uses_dynamic_stem_count(tmp_path: Path):
     completed, total, percent = separation_progress(plan, ["vocals", "guitar", "piano"])
     assert (completed, total) == (1, 3)
     assert percent == pytest.approx(100 / 3)
+
+
+def test_separation_summary_uses_dynamic_counts(tmp_path: Path):
+    source = tmp_path / "track.wav"; source.write_bytes(b"audio")
+    plan = create_separation_plan(source); plan.output_directory.mkdir()
+    (plan.output_directory / "vocals.wav").write_bytes(b"stem")
+    assert separation_summary(plan, ["vocals", "guitar"]) == "Separating — 1/2 stems (50%)"
