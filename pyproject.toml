@@ -8,8 +8,10 @@ version = "0.1.0"
 requires-python = ">=3.11,<3.12"
 dependencies = [
   "demucs==4.0.1",
-  "torch==2.5.1",
-  "torchaudio==2.5.1",
+  # Demucs 4.0.1 upstream declares torchaudio <2.1 on Windows.
+  # Keep Torch/Torchaudio matched instead of the previously incompatible 2.5.1 pair.
+  "torch==2.0.1",
+  "torchaudio==2.0.2",
 ]
 
 [project.optional-dependencies]
