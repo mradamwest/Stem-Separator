@@ -283,3 +283,13 @@ def separation_progress(plan: SeparationPlan, stem_names) -> tuple[int, int, flo
     completed = len(status["completed"])
     percent = (completed / total * 100.0) if total else 0.0
     return completed, total, percent
+
+
+def separation_summary(plan: SeparationPlan, stem_names) -> str:
+    """Create a concise UI-ready status line for any dynamic stem model."""
+    completed, total, percent = separation_progress(plan, stem_names)
+    if total == 0:
+        return "No stems detected"
+    if completed == total:
+        return f"Complete — {total} stems exported"
+    return f"Separating — {completed}/{total} stems ({percent:.0f}%)"
