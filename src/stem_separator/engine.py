@@ -384,7 +384,10 @@ def load_separator_for_plan(plan: SeparationPlan, separator_factory=None, callba
     if separator_factory is None:
         from demucs.api import Separator
         separator_factory = Separator
-    return separator_factory(model=plan.model_name, device=resolve_device(plan.device), progress=False, callback=callback)
+    kwargs = {"model": plan.model_name, "device": resolve_device(plan.device), "progress": False}
+    if callback is not None:
+        kwargs["callback"] = callback
+    return separator_factory(**kwargs)
 
 
 def separator_runtime_status(plan: SeparationPlan) -> dict[str, object]:
