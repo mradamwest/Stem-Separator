@@ -72,7 +72,10 @@ def create_separation_plan(
     if device not in {"auto", "cpu", "cuda"}:
         raise ValueError(f"Unsupported device: {device}")
     audio = validate_audio_input(source)
-    return SeparationPlan(audio, default_output_directory(audio, output_root), model_name.strip(), device)
+    resolved_output = default_output_directory(audio, output_root)
+    if resolved_output == audio.parent and resolved_output.name == audio.name:
+        raise ValueError("Output directory cannot be the input file.")
+    return SeparationPlan(audio, resolved_output, model_name.strip(), device)
 
 
 def resolve_device(requested: str = "auto") -> str:
@@ -94,3 +97,9 @@ def resolve_device(requested: str = "auto") -> str:
         return "cuda" if torch.cuda.is_available() else "cpu"
     except (ImportError, RuntimeError):
         return "cpu"
+
+
+def prepare_output_directory(plan: SeparationPlan) -> Path:
+    """Create the planned output directory without deleting existing user files."""
+    plan.output_directory.mkdir(parents=True, exist_ok=True)
+    return plan.output_directory
