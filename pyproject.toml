@@ -12,6 +12,8 @@ dependencies = [
   # Keep Torch/Torchaudio matched instead of the previously incompatible 2.5.1 pair.
   "torch==2.0.1",
   "torchaudio==2.0.2",
+  # Torch 2.0.1 / TorchAudio 2.0.2 were built against NumPy 1.x; NumPy 2 breaks the ABI.
+  "numpy<2",
   "PySide6==6.8.3",
 ]
 
