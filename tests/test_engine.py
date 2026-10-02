@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from stem_separator.engine import create_separation_plan, default_output_directory, inspect_engine, prepare_output_directory, resolve_device, validate_audio_input, validate_input
+from stem_separator.engine import create_separation_plan, default_output_directory, expected_stem_names, inspect_engine, prepare_output_directory, resolve_device, validate_audio_input, validate_input
 
 
 def test_engine_imports():
@@ -79,3 +79,12 @@ def test_prepare_output_directory_preserves_existing_files(tmp_path: Path):
     existing.write_text("keep", encoding="utf-8")
     assert prepare_output_directory(plan) == plan.output_directory
     assert existing.read_text(encoding="utf-8") == "keep"
+
+
+def test_expected_standard_stems():
+    assert expected_stem_names("htdemucs") == ("vocals", "drums", "bass", "other")
+
+
+def test_unknown_model_output_contract_is_rejected():
+    with pytest.raises(ValueError, match="Unsupported separation model"):
+        expected_stem_names("unknown")
