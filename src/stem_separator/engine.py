@@ -51,3 +51,25 @@ def default_output_directory(source: str | Path, root: str | Path | None = None)
     audio = validate_audio_input(source)
     base = Path(root).expanduser().resolve() if root is not None else audio.parent
     return base / f"{audio.stem}_stems"
+
+
+@dataclass(frozen=True)
+class SeparationPlan:
+    source: Path
+    output_directory: Path
+    model_name: str = "htdemucs"
+    device: str = "auto"
+
+
+def create_separation_plan(
+    source: str | Path,
+    output_root: str | Path | None = None,
+    model_name: str = "htdemucs",
+    device: str = "auto",
+) -> SeparationPlan:
+    if not model_name.strip():
+        raise ValueError("Model name cannot be empty.")
+    if device not in {"auto", "cpu", "cuda"}:
+        raise ValueError(f"Unsupported device: {device}")
+    audio = validate_audio_input(source)
+    return SeparationPlan(audio, default_output_directory(audio, output_root), model_name.strip(), device)
