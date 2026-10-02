@@ -118,3 +118,16 @@ def test_validate_stem_results_accepts_dynamic_count():
 def test_validate_stem_results_rejects_count_mismatch():
     with pytest.raises(RuntimeError, match="2 outputs for 3 stems"):
         validate_stem_results(["vocals", "guitar", "piano"], [1, 2])
+
+
+def test_validate_stem_audio_rejects_empty_output():
+    class EmptyAudio:
+        def numel(self): return 0
+    with pytest.raises(RuntimeError, match="vocals"):
+        validate_stem_audio("vocals", EmptyAudio())
+
+
+def test_validate_stem_audio_accepts_nonempty_output():
+    class Audio:
+        def numel(self): return 10
+    validate_stem_audio("guitar", Audio())
