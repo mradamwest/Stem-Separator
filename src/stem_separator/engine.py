@@ -174,3 +174,22 @@ def validate_sample_rate(sample_rate: int) -> int:
     if isinstance(sample_rate, bool) or not isinstance(sample_rate, int) or sample_rate <= 0:
         raise ValueError("Sample rate must be a positive integer.")
     return sample_rate
+
+
+def unique_stem_output_paths(plan: SeparationPlan, stem_names) -> dict[str, Path]:
+    """Build collision-free paths after Windows filename normalization."""
+    result: dict[str, Path] = {}
+    used: set[str] = set()
+    for original in stem_names:
+        base = safe_stem_filename(original)
+        candidate = base
+        index = 2
+        while candidate.casefold() in used:
+            stem = Path(base).stem
+            candidate = f"{stem}_{index}.wav"
+            index += 1
+        used.add(candidate.casefold())
+        result[str(original).strip()] = plan.output_directory / candidate
+    if not result:
+        raise ValueError("Stem names cannot be empty.")
+    return result
