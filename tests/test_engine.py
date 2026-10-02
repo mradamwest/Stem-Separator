@@ -355,3 +355,19 @@ def test_ensure_separation_ready_requires_download_approval(monkeypatch, tmp_pat
     with pytest.raises(RuntimeError, match="approval"):
         ensure_separation_ready(plan)
     assert ensure_separation_ready(plan, allow_model_download=True)["requires_model_download"] is True
+
+
+def test_run_separation_forwards_explicit_download_approval(monkeypatch, tmp_path: Path):
+    source = tmp_path / "track.wav"; source.write_bytes(b"audio")
+    seen = {}
+    def ready(plan, allow_model_download=False):
+        seen["allowed"] = allow_model_download
+        return {"runtime_ready": True}
+    def separate(plan):
+        plan.output_directory.mkdir(parents=True, exist_ok=True)
+        p = plan.output_directory / "vocals.wav"; p.write_bytes(b"stem")
+        return {"vocals": p}
+    monkeypatch.setattr("stem_separator.engine.ensure_separation_ready", ready)
+    monkeypatch.setattr("stem_separator.engine.separate_with_demucs", separate)
+    run_separation(source, device="cpu", allow_model_download=True)
+    assert seen["allowed"] is True
