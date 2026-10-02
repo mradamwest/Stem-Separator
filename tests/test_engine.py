@@ -181,3 +181,15 @@ def test_validate_model_sample_rate_rejects_missing_rate():
     class Model: pass
     with pytest.raises(RuntimeError, match="valid sample rate"):
         validate_model_sample_rate(Model())
+
+
+def test_validate_model_channels():
+    class Model:
+        audio_channels = 2
+    assert validate_model_channels(Model()) == 2
+
+
+def test_validate_model_channels_rejects_missing_value():
+    class Model: pass
+    with pytest.raises(RuntimeError, match="valid channel count"):
+        validate_model_channels(Model())
