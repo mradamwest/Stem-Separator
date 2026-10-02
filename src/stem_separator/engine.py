@@ -425,6 +425,14 @@ def ensure_separation_ready(plan: SeparationPlan, allow_model_download: bool = F
 
 def separation_self_test() -> dict[str, object]:
     """Lightweight packaged-runtime self-test that never downloads model weights."""
-    info = inspect_engine()
+    print("stem-self-test:start", flush=True)
+    import torch
+    print("stem-self-test:torch", flush=True)
+    import torchaudio
+    print("stem-self-test:torchaudio", flush=True)
+    import demucs
+    print("stem-self-test:demucs", flush=True)
     from demucs.api import Separator
-    return {"runtime_ready": bool(info.demucs_available), "device": info.device, "separator_api": bool(Separator)}
+    print("stem-self-test:separator-api", flush=True)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    return {"runtime_ready": True, "device": device, "separator_api": bool(Separator)}
