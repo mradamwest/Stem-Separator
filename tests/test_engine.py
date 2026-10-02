@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from stem_separator.engine import create_separation_plan, default_output_directory, inspect_engine, prepare_output_directory, resolve_device, validate_audio_input, validate_input
+from stem_separator.engine import create_separation_plan, default_output_directory, discover_model_stems, inspect_engine, prepare_output_directory, resolve_device, validate_audio_input, validate_input
 
 
 def test_engine_imports():
@@ -79,3 +79,16 @@ def test_prepare_output_directory_preserves_existing_files(tmp_path: Path):
     existing.write_text("keep", encoding="utf-8")
     assert prepare_output_directory(plan) == plan.output_directory
     assert existing.read_text(encoding="utf-8") == "keep"
+
+
+def test_discover_model_stems_is_dynamic():
+    class Model:
+        sources = ["vocals", "drums", "bass", "other", "guitar", "piano"]
+    assert discover_model_stems(Model()) == ("vocals", "drums", "bass", "other", "guitar", "piano")
+
+
+def test_discover_model_stems_rejects_missing_sources():
+    class Model:
+        sources = []
+    with pytest.raises(RuntimeError, match="does not expose"):
+        discover_model_stems(Model())
