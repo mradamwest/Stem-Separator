@@ -5,7 +5,7 @@ import pytest
 from stem_separator.engine import (
     build_export_manifest, completed_export_manifest, create_separation_plan,
     default_output_directory, discover_model_stems, ensure_output_paths_are_inside_plan,
-    inspect_engine, load_separator_for_plan, model_cache_directory, model_cache_has_files, model_cache_status, prepare_output_directory, resolve_device, run_separation, safe_stem_filename,
+    first_run_status, inspect_engine, load_separator_for_plan, model_cache_directory, model_cache_has_files, model_cache_status, prepare_output_directory, resolve_device, run_separation, safe_stem_filename,
     separate_audio, separation_preflight, separation_progress, separation_result, separation_status, separation_summary, separator_runtime_status, stem_output_paths,
     unique_stem_output_paths, validate_audio_input, validate_input,
     validate_model_channels, validate_model_sample_rate, validate_model_sources,
@@ -336,3 +336,13 @@ def test_model_cache_has_files(monkeypatch, tmp_path: Path):
     assert model_cache_has_files() is False
     root.mkdir(parents=True); (root / "model.th").write_bytes(b"weights")
     assert model_cache_has_files() is True
+
+
+def test_first_run_status_reports_model_acquisition(monkeypatch, tmp_path: Path):
+    source = tmp_path / "track.wav"; source.write_bytes(b"audio")
+    plan = create_separation_plan(source, device="cpu")
+    monkeypatch.setattr("stem_separator.engine.separation_preflight", lambda p: {"runtime_ready": True, "source": str(p.source)})
+    monkeypatch.setattr("stem_separator.engine.model_cache_has_files", lambda: False)
+    status = first_run_status(plan)
+    assert status["model_cached"] is False
+    assert status["requires_model_download"] is True
