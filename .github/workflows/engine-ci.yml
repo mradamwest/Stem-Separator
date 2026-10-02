@@ -44,7 +44,9 @@ jobs:
             throw "Packaged runtime self-test timed out after 180 seconds. Progress: $progress Errors: $errors"
           }
           $p.WaitForExit()
+          $p.Refresh()
           $exitCode = $p.ExitCode
+          if ($null -eq $exitCode) { throw "Packaged runtime self-test finished but PowerShell did not expose an exit code." }
           $progress = if (Test-Path $stdout) { Get-Content $stdout -Raw } else { "no stdout" }
           $errors = if (Test-Path $stderr) { Get-Content $stderr -Raw } else { "no stderr" }
           if ($exitCode -ne 0) { throw "Packaged runtime self-test failed with exit code $exitCode. Progress: $progress Errors: $errors" }
