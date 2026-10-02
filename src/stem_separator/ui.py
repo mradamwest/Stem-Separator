@@ -1,7 +1,7 @@
 from pathlib import Path
 from PySide6.QtCore import QThread, Signal
 from PySide6.QtWidgets import QApplication, QFileDialog, QLabel, QMainWindow, QMessageBox, QPushButton, QVBoxLayout, QWidget
-from stem_separator.engine import run_separation
+from stem_separator.engine import create_separation_plan, first_run_status, run_separation
 
 class SeparationWorker(QThread):
     completed = Signal(dict); failed = Signal(str)
@@ -20,6 +20,14 @@ class MainWindow(QMainWindow):
         path,_=QFileDialog.getOpenFileName(self,"Choose Audio","","Audio (*.wav *.mp3 *.flac *.ogg *.m4a)")
         if path: self.source=path; self.status.setText(Path(path).name); self.start.setEnabled(True)
     def separate(self):
+        try:
+            status = first_run_status(create_separation_plan(self.source))
+        except Exception as exc:
+            self.failed(str(exc)); return
+        if status.get("requires_model_download"):
+            answer = QMessageBox.question(self, "Model Download Required", "The separation model is not cached yet and must be downloaded before first use. Continue?")
+            if answer != QMessageBox.Yes:
+                self.start.setEnabled(True); self.status.setText("Model download cancelled"); return
         self.start.setEnabled(False); self.status.setText("Separating…"); self.worker=SeparationWorker(self.source); self.worker.completed.connect(self.done); self.worker.failed.connect(self.failed); self.worker.start()
     def done(self, result):
         self.start.setEnabled(True); stems=result.get("stems",{}); self.status.setText(f"Completed: {len(stems)} stems")
