@@ -44,3 +44,10 @@ def validate_audio_input(path: str | Path) -> Path:
     if source.suffix.lower() not in SUPPORTED_AUDIO_EXTENSIONS:
         raise ValueError(f"Unsupported audio format: {source.suffix or '<none>'}")
     return source
+
+
+def default_output_directory(source: str | Path, root: str | Path | None = None) -> Path:
+    """Return a deterministic per-track output directory without creating it."""
+    audio = validate_audio_input(source)
+    base = Path(root).expanduser().resolve() if root is not None else audio.parent
+    return base / f"{audio.stem}_stems"
