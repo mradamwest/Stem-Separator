@@ -4,10 +4,13 @@ from PySide6.QtWidgets import QApplication, QFileDialog, QLabel, QMainWindow, QM
 from stem_separator.engine import create_separation_plan, first_run_status, run_separation
 
 class SeparationWorker(QThread):
-    completed = Signal(dict); failed = Signal(str)
+    completed = Signal(dict); failed = Signal(str); status = Signal(str)
     def __init__(self, source, allow_model_download=False): super().__init__(); self.source = source; self.allow_model_download = allow_model_download
     def run(self):
-        try: self.completed.emit(run_separation(self.source, allow_model_download=self.allow_model_download))
+        try:
+            self.status.emit("Preparing separation model…")
+            self.status.emit("Separating audio…")
+            self.completed.emit(run_separation(self.source, allow_model_download=self.allow_model_download))
         except Exception as exc: self.failed.emit(str(exc))
 
 class MainWindow(QMainWindow):
@@ -30,7 +33,7 @@ class MainWindow(QMainWindow):
             if answer != QMessageBox.Yes:
                 self.start.setEnabled(True); self.status.setText("Model download cancelled"); return
             allow_download = True
-        self.start.setEnabled(False); self.status.setText("Separating…"); self.worker=SeparationWorker(self.source, allow_model_download=allow_download); self.worker.completed.connect(self.done); self.worker.failed.connect(self.failed); self.worker.start()
+        self.start.setEnabled(False); self.status.setText("Separating…"); self.worker=SeparationWorker(self.source, allow_model_download=allow_download); self.worker.completed.connect(self.done); self.worker.failed.connect(self.failed); self.worker.status.connect(self.status.setText); self.worker.start()
     def done(self, result):
         self.start.setEnabled(True); stems=result.get("stems",{}); self.status.setText(f"Completed: {len(stems)} stems")
         QMessageBox.information(self,"Stem Separator",f"Separation complete.\n\nOutput: {result.get('output_directory','')}")
