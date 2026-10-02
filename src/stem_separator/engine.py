@@ -213,3 +213,13 @@ def verify_exported_stems(paths: dict[str, Path]) -> None:
             raise RuntimeError(f"Stem '{name}' was not exported.")
         if path.stat().st_size == 0:
             raise RuntimeError(f"Stem '{name}' export is empty.")
+
+
+def validate_model_sample_rate(model) -> int:
+    """Read and validate the loaded separation model's sample rate."""
+    sample_rate = getattr(model, "samplerate", None)
+    if sample_rate is None:
+        sample_rate = getattr(model, "sample_rate", None)
+    if isinstance(sample_rate, bool) or not isinstance(sample_rate, int) or sample_rate <= 0:
+        raise RuntimeError("Separation model does not expose a valid sample rate.")
+    return sample_rate
