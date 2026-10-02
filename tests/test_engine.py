@@ -5,7 +5,7 @@ import pytest
 from stem_separator.engine import (
     build_export_manifest, completed_export_manifest, create_separation_plan,
     default_output_directory, discover_model_stems, ensure_output_paths_are_inside_plan,
-    inspect_engine, load_separator_for_plan, prepare_output_directory, resolve_device, safe_stem_filename,
+    inspect_engine, load_separator_for_plan, model_cache_directory, model_cache_status, prepare_output_directory, resolve_device, safe_stem_filename,
     separate_audio, separation_progress, separation_status, separation_summary, separator_runtime_status, stem_output_paths,
     unique_stem_output_paths, validate_audio_input, validate_input,
     validate_model_channels, validate_model_sample_rate, validate_model_sources,
@@ -285,3 +285,12 @@ def test_separator_runtime_status_is_ui_ready(tmp_path: Path):
     assert status["device"] == "cpu"
     assert status["model_name"] == "htdemucs"
     assert isinstance(status["ready"], bool)
+
+
+def test_model_cache_status_without_download(monkeypatch, tmp_path: Path):
+    monkeypatch.setenv("TORCH_HOME", str(tmp_path / "torch-home"))
+    assert model_cache_directory() == (tmp_path / "torch-home" / "hub" / "checkpoints").resolve()
+    status = model_cache_status()
+    assert status["exists"] is False
+    assert status["files"] == ()
+    assert status["bytes"] == 0
