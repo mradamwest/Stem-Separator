@@ -2,9 +2,6 @@ name: Actions Sanity Check
 
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - '.github/workflows/engine-ci.yml'
 
 permissions:
   contents: read
