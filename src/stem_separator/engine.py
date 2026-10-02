@@ -342,3 +342,18 @@ def separator_runtime_status(plan: SeparationPlan) -> dict[str, object]:
         demucs_ready = False
     device = resolve_device(plan.device)
     return {"demucs_available": demucs_ready, "device": device, "model_name": plan.model_name, "ready": demucs_ready}
+
+
+def model_cache_directory() -> Path:
+    """Return Demucs/Torch hub checkpoint cache location without downloading anything."""
+    import os
+    torch_home = os.environ.get("TORCH_HOME")
+    base = Path(torch_home).expanduser() if torch_home else Path.home() / ".cache" / "torch"
+    return (base / "hub" / "checkpoints").resolve()
+
+
+def model_cache_status() -> dict[str, object]:
+    """Summarize locally cached separation checkpoints for first-run UI."""
+    root = model_cache_directory()
+    files = tuple(sorted((p for p in root.glob("*") if p.is_file()), key=lambda p: p.name.casefold())) if root.is_dir() else ()
+    return {"directory": str(root), "exists": root.is_dir(), "files": tuple(p.name for p in files), "bytes": sum(p.stat().st_size for p in files)}
