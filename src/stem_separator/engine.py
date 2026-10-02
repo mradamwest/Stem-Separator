@@ -324,11 +324,40 @@ def load_separator(plan: SeparationPlan):
     return load_separator_for_plan(plan)
 
 
-def separate_with_demucs(plan: SeparationPlan) -> dict[str, Path]:
+def separate_with_demucs(plan: SeparationPlan, mode: str = "4", progress_callback=None) -> dict[str, Path]:
     """Run real separation through Demucs' Python API and export every model-provided stem."""
     from demucs.api import save_audio
-    separator = load_separator(plan)
-    _, sources = separator.separate_audio_file(plan.source)
+    if mode not in {"2", "4", "6"}:
+        raise ValueError(f"Unsupported separation mode: {mode}")
+    model_name = "htdemucs_6s" if mode == "6" else "htdemucs"
+    effective_plan = SeparationPlan(plan.source, plan.output_directory, model_name, plan.device)
+    def callback(info):
+        if progress_callback:
+            length = max(int(info.get("audio_length", 0)), 1)
+            offset = max(int(info.get("segment_offset", 0)), 0)
+            progress_callback(min(90, 10 + int(80 * min(offset / length, 1.0))), "Separating stems…")
+    separator = load_separator_for_plan(effective_plan, callback=callback)
+    media_source = plan.source
+    temporary = None
+    if is_video_input(media_source):
+        if progress_callback: progress_callback(3, "Extracting audio from video…")
+        temporary = tempfile.TemporaryDirectory(prefix="stem-separator-")
+        media_source = extract_video_audio(media_source, Path(temporary.name) / "source.wav")
+    try:
+        if progress_callback: progress_callback(8, "Loading and analyzing audio…")
+        _, sources = separator.separate_audio_file(media_source)
+    finally:
+        if temporary is not None: temporary.cleanup()
+    if mode == "2":
+        vocals = sources.get("vocals")
+        if vocals is None:
+            raise RuntimeError("The model did not return a vocals stem.")
+        parts = [audio for name, audio in sources.items() if name != "vocals"]
+        if not parts:
+            raise RuntimeError("The model did not return accompaniment stems.")
+        music = parts[0]
+        for part in parts[1:]: music = music + part
+        sources = {"vocals": vocals, "music": music}
     if not isinstance(sources, dict) or not sources:
         raise RuntimeError("Demucs returned no separated stems.")
     names = tuple(str(name).strip() for name in sources)
@@ -340,6 +369,7 @@ def separate_with_demucs(plan: SeparationPlan) -> dict[str, Path]:
         validate_stem_audio(name, audio)
         save_audio(audio, paths[name], samplerate=samplerate)
     verify_exported_stems(paths)
+    if progress_callback: progress_callback(100, "Complete")
     return paths
 
 
@@ -349,12 +379,12 @@ def separate_audio(source: str | Path, output_root: str | Path | None = None, mo
     return separate_with_demucs(plan)
 
 
-def load_separator_for_plan(plan: SeparationPlan, separator_factory=None):
+def load_separator_for_plan(plan: SeparationPlan, separator_factory=None, callback=None):
     """Create a separator with dependency injection for reliable packaging/tests."""
     if separator_factory is None:
         from demucs.api import Separator
         separator_factory = Separator
-    return separator_factory(model=plan.model_name, device=resolve_device(plan.device), progress=False)
+    return separator_factory(model=plan.model_name, device=resolve_device(plan.device), progress=False, callback=callback)
 
 
 def separator_runtime_status(plan: SeparationPlan) -> dict[str, object]:
@@ -413,12 +443,14 @@ def separation_result(plan: SeparationPlan, paths: dict[str, Path]) -> dict[str,
     }
 
 
-def run_separation(source: str | Path, output_root: str | Path | None = None, model_name: str = "htdemucs", device: str = "auto", allow_model_download: bool = False) -> dict[str, object]:
+def run_separation(source: str | Path, output_root: str | Path | None = None, model_name: str = "htdemucs", device: str = "auto", allow_model_download: bool = False, mode: str = "4", progress_callback=None) -> dict[str, object]:
     """Complete public workflow: preflight, real separation, then verified result metadata."""
     plan = create_separation_plan(source, output_root=output_root, model_name=model_name, device=device)
     ensure_separation_ready(plan, allow_model_download=allow_model_download)
-    paths = separate_with_demucs(plan)
-    return separation_result(plan, paths)
+    paths = separate_with_demucs(plan, mode=mode, progress_callback=progress_callback)
+    result = separation_result(plan, paths)
+    result["mode"] = mode
+    return result
 
 
 def model_cache_has_files() -> bool:
