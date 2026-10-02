@@ -2,7 +2,16 @@ from pathlib import Path
 
 import pytest
 
-from stem_separator.engine import build_export_manifest, completed_export_manifest, create_separation_plan, default_output_directory, discover_model_stems, inspect_engine, prepare_output_directory, safe_stem_filename, separation_progress, separation_status, separation_summary, stem_output_paths, resolve_device, validate_audio_input, validate_input
+from stem_separator.engine import (
+    build_export_manifest, completed_export_manifest, create_separation_plan,
+    default_output_directory, discover_model_stems, ensure_output_paths_are_inside_plan,
+    inspect_engine, prepare_output_directory, resolve_device, safe_stem_filename,
+    separation_progress, separation_status, separation_summary, stem_output_paths,
+    unique_stem_output_paths, validate_audio_input, validate_input,
+    validate_model_channels, validate_model_sample_rate, validate_model_sources,
+    validate_sample_rate, validate_stem_audio, validate_stem_results,
+    verify_exported_stems,
+)
 
 
 def test_engine_imports():
@@ -138,7 +147,7 @@ def test_safe_stem_filename_handles_windows_reserved_names():
     assert safe_stem_filename("lead:vocal") == "lead_vocal.wav"
 
 
-def test_ensure_output_paths_are_inside_plan, unique_stem_output_paths, validate_sample_rate():
+def test_validate_sample_rate():
     assert validate_sample_rate(44100) == 44100
     with pytest.raises(ValueError, match="positive integer"):
         validate_sample_rate(0)
