@@ -260,3 +260,17 @@ def completed_export_manifest(plan: SeparationPlan, stem_names) -> dict[str, dic
         name: {"filename": path.name, "bytes": path.stat().st_size}
         for name, path in paths.items()
     }
+
+
+def separation_status(plan: SeparationPlan, stem_names) -> dict[str, object]:
+    """Report planned/completed dynamic stem outputs without modifying user files."""
+    paths = unique_stem_output_paths(plan, stem_names)
+    ensure_output_paths_are_inside_plan(plan, paths)
+    completed = [name for name, path in paths.items() if path.is_file() and path.stat().st_size > 0]
+    return {
+        "source": str(plan.source),
+        "output_directory": str(plan.output_directory),
+        "stems": tuple(paths.keys()),
+        "completed": tuple(completed),
+        "complete": len(completed) == len(paths) and bool(paths),
+    }
