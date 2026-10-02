@@ -1,28 +1,17 @@
-name: Engine Foundation
+name: Runner Probe
 
-'on':
+on:
   push:
-    branches: [main]
   workflow_dispatch:
 
 jobs:
-  engine:
-    runs-on: windows-latest
-    timeout-minutes: 20
+  probe:
+    runs-on: windows-2025
+    timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
-        with:
-          python-version: '3.11'
-      - name: Install exact project dependencies
+      - name: Confirm Windows runner allocation
         shell: powershell
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e ".[dev]"
-      - name: Verify dependency imports
-        shell: powershell
-        run: |
-          python -c "import torch, torchaudio, demucs; print(torch.__version__, torchaudio.__version__)"
-      - name: Run foundation tests
-        shell: powershell
-        run: python -m pytest -q
+          Write-Host "Runner allocated successfully"
+          Write-Host $env:RUNNER_OS
+          Get-ComputerInfo | Select-Object WindowsProductName, WindowsVersion
