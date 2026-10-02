@@ -136,3 +136,11 @@ def test_validate_stem_audio_accepts_nonempty_output():
 def test_safe_stem_filename_handles_windows_reserved_names():
     assert safe_stem_filename("CON") == "_CON.wav"
     assert safe_stem_filename("lead:vocal") == "lead_vocal.wav"
+
+
+def test_validate_sample_rate():
+    assert validate_sample_rate(44100) == 44100
+    with pytest.raises(ValueError, match="positive integer"):
+        validate_sample_rate(0)
+    with pytest.raises(ValueError, match="positive integer"):
+        validate_sample_rate(True)
