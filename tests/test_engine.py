@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from stem_separator.engine import default_output_directory, inspect_engine, validate_audio_input, validate_input
+from stem_separator.engine import create_separation_plan, default_output_directory, inspect_engine, validate_audio_input, validate_input
 
 
 def test_engine_imports():
@@ -41,3 +41,20 @@ def test_default_output_directory(tmp_path: Path):
     source = tmp_path / "My Song.wav"
     source.write_bytes(b"audio")
     assert default_output_directory(source) == tmp_path / "My Song_stems"
+
+
+def test_create_separation_plan(tmp_path: Path):
+    source = tmp_path / "track.flac"
+    source.write_bytes(b"audio")
+    plan = create_separation_plan(source, model_name="htdemucs", device="cpu")
+    assert plan.source == source.resolve()
+    assert plan.output_directory == tmp_path / "track_stems"
+    assert plan.model_name == "htdemucs"
+    assert plan.device == "cpu"
+
+
+def test_create_separation_plan_rejects_device(tmp_path: Path):
+    source = tmp_path / "track.wav"
+    source.write_bytes(b"audio")
+    with pytest.raises(ValueError, match="Unsupported device"):
+        create_separation_plan(source, device="metal")
