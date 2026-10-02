@@ -36,19 +36,25 @@ jobs:
           $stdout = Join-Path $env:RUNNER_TEMP "stem-runtime-self-test.out"
           $stderr = Join-Path $env:RUNNER_TEMP "stem-runtime-self-test.err"
           Remove-Item $stdout,$stderr -ErrorAction SilentlyContinue
-          $p = Start-Process $exe -ArgumentList "--runtime-self-test" -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
+          $psi = New-Object System.Diagnostics.ProcessStartInfo
+          $psi.FileName = (Resolve-Path $exe).Path
+          $psi.Arguments = "--runtime-self-test"
+          $psi.UseShellExecute = $false
+          $psi.CreateNoWindow = $true
+          $psi.RedirectStandardOutput = $true
+          $psi.RedirectStandardError = $true
+          $p = New-Object System.Diagnostics.Process
+          $p.StartInfo = $psi
+          [void]$p.Start()
           if (-not $p.WaitForExit(180000)) {
-            Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
-            $progress = if (Test-Path $stdout) { Get-Content $stdout -Raw } else { "no stdout" }
-            $errors = if (Test-Path $stderr) { Get-Content $stderr -Raw } else { "no stderr" }
-            throw "Packaged runtime self-test timed out after 180 seconds. Progress: $progress Errors: $errors"
+            try { $p.Kill() } catch {}
+            throw "Packaged runtime self-test timed out after 180 seconds."
           }
-          $p.WaitForExit()
-          $p.Refresh()
+          $progress = $p.StandardOutput.ReadToEnd()
+          $errors = $p.StandardError.ReadToEnd()
           $exitCode = $p.ExitCode
-          if ($null -eq $exitCode) { throw "Packaged runtime self-test finished but PowerShell did not expose an exit code." }
-          $progress = if (Test-Path $stdout) { Get-Content $stdout -Raw } else { "no stdout" }
-          $errors = if (Test-Path $stderr) { Get-Content $stderr -Raw } else { "no stderr" }
+          Write-Host $progress
+          if ($errors) { Write-Host $errors }
           if ($exitCode -ne 0) { throw "Packaged runtime self-test failed with exit code $exitCode. Progress: $progress Errors: $errors" }
       - name: Build Windows installer
         shell: powershell
