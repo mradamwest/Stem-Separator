@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+import subprocess
+import tempfile
 
 
 @dataclass(frozen=True)
@@ -36,6 +38,28 @@ def validate_input(path: str | Path) -> Path:
 
 
 SUPPORTED_AUDIO_EXTENSIONS = frozenset({".wav", ".mp3", ".flac", ".ogg", ".m4a"})
+SUPPORTED_VIDEO_EXTENSIONS = frozenset({".mp4", ".mov", ".mkv", ".avi", ".webm", ".m4v", ".mpeg", ".mpg"})
+SUPPORTED_MEDIA_EXTENSIONS = SUPPORTED_AUDIO_EXTENSIONS | SUPPORTED_VIDEO_EXTENSIONS
+
+def validate_media_input(path: str | Path) -> Path:
+    source = validate_input(path)
+    if source.suffix.lower() not in SUPPORTED_MEDIA_EXTENSIONS:
+        raise ValueError(f"Unsupported audio/video format: {source.suffix or '<none>'}")
+    return source
+
+def is_video_input(path: str | Path) -> bool:
+    return Path(path).suffix.lower() in SUPPORTED_VIDEO_EXTENSIONS
+
+def extract_video_audio(source: str | Path, destination: str | Path) -> Path:
+    import imageio_ffmpeg
+    src = validate_media_input(source)
+    dest = Path(destination).expanduser().resolve()
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    result = subprocess.run([imageio_ffmpeg.get_ffmpeg_exe(), "-y", "-i", str(src), "-vn", "-acodec", "pcm_s16le", str(dest)], capture_output=True, text=True, creationflags=flags)
+    if result.returncode != 0 or not dest.is_file() or dest.stat().st_size == 0:
+        raise RuntimeError("Could not extract audio from the selected video.")
+    return dest
 
 
 def validate_audio_input(path: str | Path) -> Path:
@@ -48,7 +72,7 @@ def validate_audio_input(path: str | Path) -> Path:
 
 def default_output_directory(source: str | Path, root: str | Path | None = None) -> Path:
     """Return a deterministic per-track output directory without creating it."""
-    audio = validate_audio_input(source)
+    audio = validate_media_input(source)
     base = Path(root).expanduser().resolve() if root is not None else audio.parent
     return base / f"{audio.stem}_stems"
 
@@ -71,7 +95,7 @@ def create_separation_plan(
         raise ValueError("Model name cannot be empty.")
     if device not in {"auto", "cpu", "cuda"}:
         raise ValueError(f"Unsupported device: {device}")
-    audio = validate_audio_input(source)
+    audio = validate_media_input(source)
     resolved_output = default_output_directory(audio, output_root)
     if resolved_output == audio.parent and resolved_output.name == audio.name:
         raise ValueError("Output directory cannot be the input file.")
@@ -361,7 +385,7 @@ def model_cache_status() -> dict[str, object]:
 
 def separation_preflight(plan: SeparationPlan) -> dict[str, object]:
     """Validate everything possible before model loading or checkpoint download."""
-    source = validate_audio_input(plan.source)
+    source = validate_media_input(plan.source)
     runtime = separator_runtime_status(plan)
     cache = model_cache_status()
     return {
