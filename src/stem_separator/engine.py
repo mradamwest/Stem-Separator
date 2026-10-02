@@ -397,3 +397,8 @@ def run_separation(source: str | Path, output_root: str | Path | None = None, mo
         raise RuntimeError("Demucs runtime is not available.")
     paths = separate_with_demucs(plan)
     return separation_result(plan, paths)
+
+
+def model_cache_has_files() -> bool:
+    """Return whether any local separation checkpoint is already cached."""
+    return bool(model_cache_status()["files"])
