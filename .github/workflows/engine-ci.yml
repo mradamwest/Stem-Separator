@@ -46,6 +46,30 @@ jobs:
           if (!(Test-Path $iscc)) { throw "Inno Setup compiler missing" }
           & $iscc "installer\StemSeparator.iss"
           if (!(Test-Path "dist-installer\Stem_Separator_Setup_0.1.0.exe")) { throw "Installer missing" }
+      - name: Validate installed application and uninstaller
+        shell: powershell
+        run: |
+          $installer = (Resolve-Path ".\\dist-installer\\Stem_Separator_Setup_0.1.0.exe").Path
+          $installDir = Join-Path $env:RUNNER_TEMP "StemSeparatorInstalled"
+          $desktopShortcut = Join-Path ([Environment]::GetFolderPath("Desktop")) "Stem Separator.lnk"
+          $startShortcut = Join-Path $env:APPDATA "Microsoft\\Windows\\Start Menu\\Programs\\Stem Separator.lnk"
+          $p = Start-Process $installer -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART","/DIR=$installDir" -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "Silent install failed with exit code $($p.ExitCode)" }
+          $exe = Join-Path $installDir "StemSeparator.exe"
+          if (!(Test-Path $exe)) { throw "Installed executable missing" }
+          $p = Start-Process $exe -ArgumentList "--runtime-self-test" -PassThru
+          if (-not $p.WaitForExit(180000)) {
+            Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
+            throw "Installed runtime self-test timed out after 180 seconds"
+          }
+          if ($p.ExitCode -ne 0) { throw "Installed app self-test failed with exit code $($p.ExitCode)" }
+          if (!(Test-Path $desktopShortcut)) { throw "Desktop shortcut missing after install" }
+          if (!(Test-Path $startShortcut)) { throw "Start Menu shortcut missing after install" }
+          $uninstaller = Join-Path $installDir "unins000.exe"
+          if (!(Test-Path $uninstaller)) { throw "Uninstaller executable missing" }
+          $p = Start-Process $uninstaller -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART" -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "Silent uninstall failed with exit code $($p.ExitCode)" }
+          if (Test-Path $exe) { throw "Application executable remains after uninstall" }
       - name: Upload Windows installer
         uses: actions/upload-artifact@v4
         with:
