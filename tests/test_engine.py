@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from stem_separator.engine import create_separation_plan, default_output_directory, discover_model_stems, inspect_engine, prepare_output_directory, safe_stem_filename, stem_output_paths, resolve_device, validate_audio_input, validate_input
+from stem_separator.engine import build_export_manifest, create_separation_plan, default_output_directory, discover_model_stems, inspect_engine, prepare_output_directory, safe_stem_filename, stem_output_paths, resolve_device, validate_audio_input, validate_input
 
 
 def test_engine_imports():
@@ -200,3 +200,10 @@ def test_validate_model_sources_rejects_case_collisions():
         sources = ["Vocals", "vocals"]
     with pytest.raises(RuntimeError, match="case-insensitive duplicate"):
         validate_model_sources(Model())
+
+
+def test_build_export_manifest_tracks_dynamic_stems(tmp_path: Path):
+    source = tmp_path / "track.wav"; source.write_bytes(b"audio")
+    plan = create_separation_plan(source)
+    manifest = build_export_manifest(plan, ["vocals", "guitar", "piano"])
+    assert manifest == {"vocals": "vocals.wav", "guitar": "guitar.wav", "piano": "piano.wav"}
