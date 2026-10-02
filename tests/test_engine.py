@@ -5,7 +5,7 @@ import pytest
 from stem_separator.engine import (
     build_export_manifest, completed_export_manifest, create_separation_plan,
     default_output_directory, discover_model_stems, ensure_output_paths_are_inside_plan,
-    inspect_engine, prepare_output_directory, resolve_device, safe_stem_filename,
+    inspect_engine, load_separator_for_plan, prepare_output_directory, resolve_device, safe_stem_filename,
     separate_audio, separation_progress, separation_status, separation_summary, stem_output_paths,
     unique_stem_output_paths, validate_audio_input, validate_input,
     validate_model_channels, validate_model_sample_rate, validate_model_sources,
@@ -265,3 +265,14 @@ def test_separate_audio_builds_plan_and_dispatches(monkeypatch, tmp_path: Path):
     assert captured["plan"].source == source.resolve()
     assert captured["plan"].device == "cpu"
     assert "vocals" in result
+
+
+def test_load_separator_for_plan_uses_requested_model_and_device(tmp_path: Path):
+    source = tmp_path / "track.wav"; source.write_bytes(b"audio")
+    plan = create_separation_plan(source, model_name="custom-model", device="cpu")
+    calls = {}
+    def factory(**kwargs):
+        calls.update(kwargs)
+        return object()
+    load_separator_for_plan(plan, factory)
+    assert calls == {"model": "custom-model", "device": "cpu", "progress": False}
