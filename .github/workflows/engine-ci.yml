@@ -32,7 +32,12 @@ jobs:
       - name: Run packaged runtime self-test
         shell: powershell
         run: |
-          $p = Start-Process ".\dist\StemSeparator\StemSeparator.exe" -ArgumentList "--runtime-self-test" -Wait -PassThru
+          $exe = ".\\dist\\StemSeparator\\StemSeparator.exe"
+          $p = Start-Process $exe -ArgumentList "--runtime-self-test" -PassThru
+          if (-not $p.WaitForExit(180000)) {
+            Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
+            throw "Packaged runtime self-test timed out after 180 seconds"
+          }
           if ($p.ExitCode -ne 0) { throw "Packaged runtime self-test failed with exit code $($p.ExitCode)" }
       - name: Build Windows installer
         shell: powershell
