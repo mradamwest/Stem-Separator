@@ -5,9 +5,9 @@ from stem_separator.engine import create_separation_plan, first_run_status, run_
 
 class SeparationWorker(QThread):
     completed = Signal(dict); failed = Signal(str)
-    def __init__(self, source): super().__init__(); self.source = source
+    def __init__(self, source, allow_model_download=False): super().__init__(); self.source = source; self.allow_model_download = allow_model_download
     def run(self):
-        try: self.completed.emit(run_separation(self.source, allow_model_download=True))
+        try: self.completed.emit(run_separation(self.source, allow_model_download=self.allow_model_download))
         except Exception as exc: self.failed.emit(str(exc))
 
 class MainWindow(QMainWindow):
@@ -24,11 +24,13 @@ class MainWindow(QMainWindow):
             status = first_run_status(create_separation_plan(self.source))
         except Exception as exc:
             self.failed(str(exc)); return
+        allow_download = False
         if status.get("requires_model_download"):
             answer = QMessageBox.question(self, "Model Download Required", "The separation model is not cached yet and must be downloaded before first use. Continue?")
             if answer != QMessageBox.Yes:
                 self.start.setEnabled(True); self.status.setText("Model download cancelled"); return
-        self.start.setEnabled(False); self.status.setText("Separating…"); self.worker=SeparationWorker(self.source); self.worker.completed.connect(self.done); self.worker.failed.connect(self.failed); self.worker.start()
+            allow_download = True
+        self.start.setEnabled(False); self.status.setText("Separating…"); self.worker=SeparationWorker(self.source, allow_model_download=allow_download); self.worker.completed.connect(self.done); self.worker.failed.connect(self.failed); self.worker.start()
     def done(self, result):
         self.start.setEnabled(True); stems=result.get("stems",{}); self.status.setText(f"Completed: {len(stems)} stems")
         QMessageBox.information(self,"Stem Separator",f"Separation complete.\n\nOutput: {result.get('output_directory','')}")
