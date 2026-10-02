@@ -387,3 +387,13 @@ def separation_result(plan: SeparationPlan, paths: dict[str, Path]) -> dict[str,
         "count": len(paths),
         "bytes": sum(path.stat().st_size for path in paths.values()),
     }
+
+
+def run_separation(source: str | Path, output_root: str | Path | None = None, model_name: str = "htdemucs", device: str = "auto") -> dict[str, object]:
+    """Complete public workflow: preflight, real separation, then verified result metadata."""
+    plan = create_separation_plan(source, output_root=output_root, model_name=model_name, device=device)
+    preflight = separation_preflight(plan)
+    if not preflight["runtime_ready"]:
+        raise RuntimeError("Demucs runtime is not available.")
+    paths = separate_with_demucs(plan)
+    return separation_result(plan, paths)
