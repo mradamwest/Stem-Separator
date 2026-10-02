@@ -293,3 +293,28 @@ def separation_summary(plan: SeparationPlan, stem_names) -> str:
     if completed == total:
         return f"Complete — {total} stems exported"
     return f"Separating — {completed}/{total} stems ({percent:.0f}%)"
+
+
+def load_separator(plan: SeparationPlan):
+    """Load Demucs through its Python API; never spawn the packaged executable."""
+    from demucs.api import Separator
+    return Separator(model=plan.model_name, device=resolve_device(plan.device), progress=False)
+
+
+def separate_with_demucs(plan: SeparationPlan) -> dict[str, Path]:
+    """Run real separation through Demucs' Python API and export every model-provided stem."""
+    from demucs.api import save_audio
+    separator = load_separator(plan)
+    _, sources = separator.separate_audio_file(plan.source)
+    if not isinstance(sources, dict) or not sources:
+        raise RuntimeError("Demucs returned no separated stems.")
+    names = tuple(str(name).strip() for name in sources)
+    paths = unique_stem_output_paths(plan, names)
+    ensure_output_paths_are_inside_plan(plan, paths)
+    prepare_output_directory(plan)
+    samplerate = validate_sample_rate(separator.samplerate)
+    for name, audio in sources.items():
+        validate_stem_audio(name, audio)
+        save_audio(audio, paths[name], samplerate=samplerate)
+    verify_exported_stems(paths)
+    return paths
