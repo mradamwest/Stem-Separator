@@ -167,3 +167,10 @@ def safe_stem_filename(stem_name: str) -> str:
     if cleaned.upper() in reserved:
         cleaned = f"_{cleaned}"
     return f"{cleaned}.wav"
+
+
+def validate_sample_rate(sample_rate: int) -> int:
+    """Validate export sample rate before writing separated audio."""
+    if isinstance(sample_rate, bool) or not isinstance(sample_rate, int) or sample_rate <= 0:
+        raise ValueError("Sample rate must be a positive integer.")
+    return sample_rate
