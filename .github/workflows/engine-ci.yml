@@ -6,12 +6,11 @@ on:
 
 jobs:
   probe:
-    runs-on: windows-2025
+    runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Confirm Windows runner allocation
-        shell: powershell
+      - name: Confirm hosted runner allocation
         run: |
-          Write-Host "Runner allocated successfully"
-          Write-Host $env:RUNNER_OS
-          Get-ComputerInfo | Select-Object WindowsProductName, WindowsVersion
+          echo "Runner allocated successfully"
+          echo "$RUNNER_OS"
+          uname -a
