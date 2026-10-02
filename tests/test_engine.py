@@ -71,7 +71,13 @@ def test_create_separation_plan_rejects_device(tmp_path: Path):
 
 def test_resolve_explicit_device():
     assert resolve_device("cpu") == "cpu"
-    assert resolve_device("cuda") == "cuda"
+
+    import torch
+    if torch.cuda.is_available():
+        assert resolve_device("cuda") == "cuda"
+    else:
+        with pytest.raises(RuntimeError, match="no compatible GPU"):
+            resolve_device("cuda")
 
 
 def test_resolve_device_rejects_unknown():
