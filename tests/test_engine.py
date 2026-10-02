@@ -6,7 +6,7 @@ from stem_separator.engine import (
     build_export_manifest, completed_export_manifest, create_separation_plan,
     default_output_directory, discover_model_stems, ensure_output_paths_are_inside_plan,
     inspect_engine, load_separator_for_plan, model_cache_directory, model_cache_status, prepare_output_directory, resolve_device, safe_stem_filename,
-    separate_audio, separation_preflight, separation_progress, separation_status, separation_summary, separator_runtime_status, stem_output_paths,
+    separate_audio, separation_preflight, separation_progress, separation_result, separation_status, separation_summary, separator_runtime_status, stem_output_paths,
     unique_stem_output_paths, validate_audio_input, validate_input,
     validate_model_channels, validate_model_sample_rate, validate_model_sources,
     validate_sample_rate, validate_stem_audio, validate_stem_results,
@@ -303,3 +303,14 @@ def test_separation_preflight_does_not_create_output(tmp_path: Path):
     assert status["source"] == str(source.resolve())
     assert status["device"] == "cpu"
     assert not plan.output_directory.exists()
+
+
+def test_separation_result_verifies_dynamic_exports(tmp_path: Path):
+    source = tmp_path / "track.wav"; source.write_bytes(b"audio")
+    plan = create_separation_plan(source); plan.output_directory.mkdir()
+    vocals = plan.output_directory / "vocals.wav"; vocals.write_bytes(b"voice")
+    guitar = plan.output_directory / "guitar.wav"; guitar.write_bytes(b"guitar")
+    result = separation_result(plan, {"vocals": vocals, "guitar": guitar})
+    assert result["count"] == 2
+    assert result["bytes"] == 11
+    assert set(result["stems"]) == {"vocals", "guitar"}
