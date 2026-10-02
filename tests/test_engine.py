@@ -323,7 +323,7 @@ def test_run_separation_connects_preflight_engine_and_result(monkeypatch, tmp_pa
         plan.output_directory.mkdir(parents=True, exist_ok=True)
         path = plan.output_directory / "vocals.wav"; path.write_bytes(b"stem")
         return {"vocals": path}
-    monkeypatch.setattr("stem_separator.engine.separation_preflight", fake_preflight)
+    monkeypatch.setattr("stem_separator.engine.ensure_separation_ready", lambda plan, allow_model_download=False: {"runtime_ready": True})
     monkeypatch.setattr("stem_separator.engine.separate_with_demucs", fake_separate)
     result = run_separation(source, device="cpu")
     assert result["count"] == 1
