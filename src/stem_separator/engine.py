@@ -223,3 +223,13 @@ def validate_model_sample_rate(model) -> int:
     if isinstance(sample_rate, bool) or not isinstance(sample_rate, int) or sample_rate <= 0:
         raise RuntimeError("Separation model does not expose a valid sample rate.")
     return sample_rate
+
+
+def validate_model_channels(model) -> int:
+    """Validate the channel count expected by a loaded separation model."""
+    channels = getattr(model, "audio_channels", None)
+    if channels is None:
+        channels = getattr(model, "channels", None)
+    if isinstance(channels, bool) or not isinstance(channels, int) or channels <= 0:
+        raise RuntimeError("Separation model does not expose a valid channel count.")
+    return channels
