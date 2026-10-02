@@ -193,3 +193,12 @@ def unique_stem_output_paths(plan: SeparationPlan, stem_names) -> dict[str, Path
     if not result:
         raise ValueError("Stem names cannot be empty.")
     return result
+
+
+def ensure_output_paths_are_inside_plan(plan: SeparationPlan, paths: dict[str, Path]) -> None:
+    """Guarantee every generated stem remains inside its planned output directory."""
+    root = plan.output_directory.resolve()
+    for path in paths.values():
+        resolved = path.resolve()
+        if resolved.parent != root:
+            raise ValueError(f"Stem output escapes planned directory: {resolved}")
