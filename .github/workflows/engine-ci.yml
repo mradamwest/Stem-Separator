@@ -43,7 +43,11 @@ jobs:
             $errors = if (Test-Path $stderr) { Get-Content $stderr -Raw } else { "no stderr" }
             throw "Packaged runtime self-test timed out after 180 seconds. Progress: $progress Errors: $errors"
           }
-          if ($p.ExitCode -ne 0) { throw "Packaged runtime self-test failed with exit code $($p.ExitCode)" }
+          $p.WaitForExit()
+          $exitCode = $p.ExitCode
+          $progress = if (Test-Path $stdout) { Get-Content $stdout -Raw } else { "no stdout" }
+          $errors = if (Test-Path $stderr) { Get-Content $stderr -Raw } else { "no stderr" }
+          if ($exitCode -ne 0) { throw "Packaged runtime self-test failed with exit code $exitCode. Progress: $progress Errors: $errors" }
       - name: Build Windows installer
         shell: powershell
         run: |
