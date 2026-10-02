@@ -6,7 +6,7 @@ from stem_separator.engine import (
     build_export_manifest, completed_export_manifest, create_separation_plan,
     default_output_directory, discover_model_stems, ensure_output_paths_are_inside_plan,
     inspect_engine, load_separator_for_plan, prepare_output_directory, resolve_device, safe_stem_filename,
-    separate_audio, separation_progress, separation_status, separation_summary, stem_output_paths,
+    separate_audio, separation_progress, separation_status, separation_summary, separator_runtime_status, stem_output_paths,
     unique_stem_output_paths, validate_audio_input, validate_input,
     validate_model_channels, validate_model_sample_rate, validate_model_sources,
     validate_sample_rate, validate_stem_audio, validate_stem_results,
@@ -276,3 +276,12 @@ def test_load_separator_for_plan_uses_requested_model_and_device(tmp_path: Path)
         return object()
     load_separator_for_plan(plan, factory)
     assert calls == {"model": "custom-model", "device": "cpu", "progress": False}
+
+
+def test_separator_runtime_status_is_ui_ready(tmp_path: Path):
+    source = tmp_path / "track.wav"; source.write_bytes(b"audio")
+    plan = create_separation_plan(source, device="cpu")
+    status = separator_runtime_status(plan)
+    assert status["device"] == "cpu"
+    assert status["model_name"] == "htdemucs"
+    assert isinstance(status["ready"], bool)
