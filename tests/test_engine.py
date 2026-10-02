@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from stem_separator.engine import inspect_engine, validate_input
+from stem_separator.engine import inspect_engine, validate_audio_input, validate_input
 
 
 def test_engine_imports():
@@ -22,3 +22,16 @@ def test_validate_input(tmp_path: Path):
 def test_missing_input(tmp_path: Path):
     with pytest.raises(FileNotFoundError):
         validate_input(tmp_path / "missing.wav")
+
+
+def test_validate_audio_input_rejects_unknown_format(tmp_path: Path):
+    source = tmp_path / "sample.txt"
+    source.write_bytes(b"audio")
+    with pytest.raises(ValueError, match="Unsupported audio format"):
+        validate_audio_input(source)
+
+
+def test_validate_audio_input_accepts_wav(tmp_path: Path):
+    source = tmp_path / "sample.WAV"
+    source.write_bytes(b"audio")
+    assert validate_audio_input(source) == source.resolve()
