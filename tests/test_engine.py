@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from stem_separator.engine import build_export_manifest, completed_export_manifest, create_separation_plan, default_output_directory, discover_model_stems, inspect_engine, prepare_output_directory, safe_stem_filename, stem_output_paths, resolve_device, validate_audio_input, validate_input
+from stem_separator.engine import build_export_manifest, completed_export_manifest, create_separation_plan, default_output_directory, discover_model_stems, inspect_engine, prepare_output_directory, safe_stem_filename, separation_status, stem_output_paths, resolve_device, validate_audio_input, validate_input
 
 
 def test_engine_imports():
@@ -217,3 +217,13 @@ def test_completed_export_manifest_verifies_files(tmp_path: Path):
     manifest = completed_export_manifest(plan, ["vocals"])
     assert manifest["vocals"]["filename"] == "vocals.wav"
     assert manifest["vocals"]["bytes"] == 4
+
+
+def test_separation_status_tracks_partial_dynamic_outputs(tmp_path: Path):
+    source = tmp_path / "track.wav"; source.write_bytes(b"audio")
+    plan = create_separation_plan(source)
+    plan.output_directory.mkdir()
+    (plan.output_directory / "vocals.wav").write_bytes(b"stem")
+    status = separation_status(plan, ["vocals", "guitar"])
+    assert status["completed"] == ("vocals",)
+    assert status["complete"] is False
