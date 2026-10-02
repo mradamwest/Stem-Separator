@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from stem_separator.engine import create_separation_plan, default_output_directory, discover_model_stems, inspect_engine, prepare_output_directory, stem_output_paths, resolve_device, validate_audio_input, validate_input
+from stem_separator.engine import create_separation_plan, default_output_directory, discover_model_stems, inspect_engine, prepare_output_directory, safe_stem_filename, stem_output_paths, resolve_device, validate_audio_input, validate_input
 
 
 def test_engine_imports():
@@ -131,3 +131,8 @@ def test_validate_stem_audio_accepts_nonempty_output():
     class Audio:
         def numel(self): return 10
     validate_stem_audio("guitar", Audio())
+
+
+def test_safe_stem_filename_handles_windows_reserved_names():
+    assert safe_stem_filename("CON") == "_CON.wav"
+    assert safe_stem_filename("lead:vocal") == "lead_vocal.wav"
