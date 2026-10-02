@@ -116,3 +116,16 @@ def discover_model_stems(model) -> tuple[str, ...]:
     if len(set(names)) != len(names):
         raise RuntimeError("Separation model returned duplicate stem names.")
     return names
+
+
+def stem_output_paths(plan: SeparationPlan, stem_names) -> dict[str, Path]:
+    """Map model-reported stems to safe WAV destinations without assuming stem count."""
+    names = tuple(str(name).strip() for name in stem_names)
+    if not names or any(not name for name in names):
+        raise ValueError("Stem names cannot be empty.")
+    if len(set(names)) != len(names):
+        raise ValueError("Stem names must be unique.")
+    unsafe = {"/", "\\", ".."}
+    if any(any(token in name for token in unsafe) for name in names):
+        raise ValueError("Stem names contain unsafe path characters.")
+    return {name: plan.output_directory / f"{name}.wav" for name in names}
