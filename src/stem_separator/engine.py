@@ -128,7 +128,7 @@ def stem_output_paths(plan: SeparationPlan, stem_names) -> dict[str, Path]:
     unsafe = {"/", "\\", ".."}
     if any(any(token in name for token in unsafe) for name in names):
         raise ValueError("Stem names contain unsafe path characters.")
-    return {name: plan.output_directory / f"{name}.wav" for name in names}
+    return {name: plan.output_directory / safe_stem_filename(name) for name in names}
 
 
 def validate_stem_results(stem_names, tensors) -> tuple[str, ...]:
@@ -152,3 +152,18 @@ def validate_stem_audio(stem_name: str, audio) -> None:
     numel = getattr(audio, "numel", None)
     if not callable(numel) or numel() <= 0:
         raise RuntimeError(f"Stem '{stem_name}' contains no audio.")
+
+
+def safe_stem_filename(stem_name: str) -> str:
+    """Normalize a model-reported stem label into a Windows-safe WAV filename."""
+    name = str(stem_name).strip()
+    if not name:
+        raise ValueError("Stem name cannot be empty.")
+    invalid = '<>:"/\\|?*'
+    cleaned = ''.join('_' if ch in invalid or ord(ch) < 32 else ch for ch in name).rstrip(' .')
+    if not cleaned:
+        raise ValueError("Stem name does not contain a usable filename.")
+    reserved = {"CON","PRN","AUX","NUL",*(f"COM{i}" for i in range(1,10)),*(f"LPT{i}" for i in range(1,10))}
+    if cleaned.upper() in reserved:
+        cleaned = f"_{cleaned}"
+    return f"{cleaned}.wav"
