@@ -249,3 +249,14 @@ def build_export_manifest(plan: SeparationPlan, stem_names) -> dict[str, str]:
     paths = unique_stem_output_paths(plan, stem_names)
     ensure_output_paths_are_inside_plan(plan, paths)
     return {name: path.name for name, path in paths.items()}
+
+
+def completed_export_manifest(plan: SeparationPlan, stem_names) -> dict[str, dict[str, object]]:
+    """Return verified export metadata only after every dynamic stem exists on disk."""
+    paths = unique_stem_output_paths(plan, stem_names)
+    ensure_output_paths_are_inside_plan(plan, paths)
+    verify_exported_stems(paths)
+    return {
+        name: {"filename": path.name, "bytes": path.stat().st_size}
+        for name, path in paths.items()
+    }
