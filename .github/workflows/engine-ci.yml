@@ -68,8 +68,8 @@ jobs:
         run: |
           $installer = (Resolve-Path ".\\dist-installer\\Stem_Separator_Setup_0.1.0.exe").Path
           $installDir = Join-Path $env:RUNNER_TEMP "StemSeparatorInstalled"
-          $desktopShortcut = Join-Path ([Environment]::GetFolderPath("Desktop")) "Stem Separator.lnk"
-          $startShortcut = Join-Path $env:APPDATA "Microsoft\\Windows\\Start Menu\\Programs\\Stem Separator.lnk"
+          $desktopShortcut = Join-Path $env:PUBLIC "Desktop\\Stem Separator.lnk"
+          $startShortcut = Join-Path $env:ProgramData "Microsoft\\Windows\\Start Menu\\Programs\\Stem Separator.lnk"
           $p = Start-Process $installer -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART","/DIR=$installDir" -Wait -PassThru
           if ($p.ExitCode -ne 0) { throw "Silent install failed with exit code $($p.ExitCode)" }
           $exe = Join-Path $installDir "StemSeparator.exe"
