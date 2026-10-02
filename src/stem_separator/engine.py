@@ -357,3 +357,19 @@ def model_cache_status() -> dict[str, object]:
     root = model_cache_directory()
     files = tuple(sorted((p for p in root.glob("*") if p.is_file()), key=lambda p: p.name.casefold())) if root.is_dir() else ()
     return {"directory": str(root), "exists": root.is_dir(), "files": tuple(p.name for p in files), "bytes": sum(p.stat().st_size for p in files)}
+
+
+def separation_preflight(plan: SeparationPlan) -> dict[str, object]:
+    """Validate everything possible before model loading or checkpoint download."""
+    source = validate_audio_input(plan.source)
+    runtime = separator_runtime_status(plan)
+    cache = model_cache_status()
+    return {
+        "source": str(source),
+        "output_directory": str(plan.output_directory),
+        "model_name": plan.model_name,
+        "device": runtime["device"],
+        "runtime_ready": runtime["ready"],
+        "cache_directory": cache["directory"],
+        "cached_files": cache["files"],
+    }
