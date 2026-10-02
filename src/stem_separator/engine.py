@@ -389,10 +389,10 @@ def separation_result(plan: SeparationPlan, paths: dict[str, Path]) -> dict[str,
     }
 
 
-def run_separation(source: str | Path, output_root: str | Path | None = None, model_name: str = "htdemucs", device: str = "auto") -> dict[str, object]:
+def run_separation(source: str | Path, output_root: str | Path | None = None, model_name: str = "htdemucs", device: str = "auto", allow_model_download: bool = False) -> dict[str, object]:
     """Complete public workflow: preflight, real separation, then verified result metadata."""
     plan = create_separation_plan(source, output_root=output_root, model_name=model_name, device=device)
-    ensure_separation_ready(plan, allow_model_download=False)
+    ensure_separation_ready(plan, allow_model_download=allow_model_download)
     paths = separate_with_demucs(plan)
     return separation_result(plan, paths)
 
