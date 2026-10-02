@@ -103,10 +103,3 @@ def prepare_output_directory(plan: SeparationPlan) -> Path:
     """Create the planned output directory without deleting existing user files."""
     plan.output_directory.mkdir(parents=True, exist_ok=True)
     return plan.output_directory
-
-
-def expected_stem_names(model_name: str = "htdemucs") -> tuple[str, ...]:
-    """Return the standard four-source Demucs output contract used by the UI."""
-    if model_name.strip() in {"htdemucs", "htdemucs_ft", "mdx", "mdx_extra"}:
-        return ("vocals", "drums", "bass", "other")
-    raise ValueError(f"Unsupported separation model: {model_name}")
