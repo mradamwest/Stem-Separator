@@ -331,3 +331,14 @@ def load_separator_for_plan(plan: SeparationPlan, separator_factory=None):
         from demucs.api import Separator
         separator_factory = Separator
     return separator_factory(model=plan.model_name, device=resolve_device(plan.device), progress=False)
+
+
+def separator_runtime_status(plan: SeparationPlan) -> dict[str, object]:
+    """Report package/runtime readiness without downloading a Demucs model."""
+    try:
+        import demucs.api
+        demucs_ready = True
+    except (ImportError, ModuleNotFoundError):
+        demucs_ready = False
+    device = resolve_device(plan.device)
+    return {"demucs_available": demucs_ready, "device": device, "model_name": plan.model_name, "ready": demucs_ready}
